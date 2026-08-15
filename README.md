@@ -2,7 +2,7 @@
 
 Raccolta di piccole web-app didattiche, pensate per bambini della scuola primaria, pubblicate tramite GitHub Pages.
 
-**Sito live:** `https://tuonomeutente.github.io/nome-repository/`
+**Sito live:** `https://negilumia.github.io/edu_webapp/`
 
 ## 📂 Struttura del repository
 
