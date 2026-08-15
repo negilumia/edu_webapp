@@ -12,37 +12,37 @@
 const WORLDS = {
 
   // ----------------------------------------------------------
-  // IL REGNO DEI FUNGHI — 15 stanze, facile
-  // Leo, un giovane idraulico coraggioso, deve attraversare il
-  // Regno dei Funghi per salvare la Principessa Stella dalle
-  // grinfie del terribile Re Corazza.
+  // IL REGNO DELLE MACCHINE — 15 stanze, facile
+  // Leo, giovane apprendista inventore, deve attraversare le sale
+  // di ingranaggi e vapore del regno per riparare il Grande
+  // Orologio prima che il tempo si fermi per sempre.
   // ----------------------------------------------------------
   castello: {
     id: "castello",
     theme: "castello",
-    emoji: "🍄",
-    name: "Il Regno dei Funghi",
-    tagline: "Un'avventura a tappe piena di monete e sorprese.",
+    emoji: "⚙️",
+    name: "Il Regno delle Macchine",
+    tagline: "Un'avventura tra ingranaggi, vapore e invenzioni.",
     difficulty: "facile",
     level: "easy",
-    briefing: "Il perfido Re Corazza ha rapito la Principessa Stella e l'ha rinchiusa nel suo castello! Leo, il giovane idraulico coraggioso, parte all'avventura attraverso il Regno dei Funghi. Ogni ostacolo si supera solo risolvendo un enigma. Aiuterai Leo a salvare la principessa?",
-    victoryText: "Leo sconfigge Re Corazza e libera la Principessa Stella! Tutto il Regno dei Funghi festeggia con fuochi d'artificio.",
+    briefing: "Il Grande Orologio che scandisce il tempo per tutto il Regno delle Macchine si è fermato! Leo, giovane apprendista inventore, deve attraversare sale di ingranaggi e vapore per ripararlo pezzo dopo pezzo, risolvendo un enigma alla volta. Aiuterai Leo a rimettere in moto il regno?",
+    victoryText: "Il Grande Orologio riparte con un rombo potente! Gli ingranaggi tornano a girare e tutto il Regno delle Macchine festeggia con fischi di vapore e campane di ottone.",
     stanze: [
-      { text: "Leo entra nel primo tubo verde e cade in un prato pieno di monete dorate.", problems: [{ type: "addsub" }] },
-      { text: "Tra l'erba alta, Leo nota tante monete: alcune sono dorate, altre argentate.", problems: [{ type: "counting", flavor: { mainEmoji: "🪙", targetEmoji: "⚪", label: "monete argentate", allLabel: "monete" } }] },
-      { text: "Due tubi conducono avanti: uno più alto, uno più basso. Leo deve scegliere quello giusto.", problems: [{ type: "comparison" }] },
-      { text: "Una fila di blocchi numerati galleggia a mezz'aria: manca un blocco per completare il ponte.", problems: [{ type: "sequence" }] },
-      { text: "Un blocco a punto interrogativo trema: per aprirlo bisogna conoscere la sua forma.", problems: [{ type: "shapes" }] },
-      { text: "Leo attraversa una grotta di funghi luminosi che ronzano di numeri.", problems: [{ type: "addsub" }] },
-      { text: "Alcuni gnomi mercanti vendono bandierine colorate e propongono un indovinello.", problems: [{ type: "combinatoria", flavor: { itemLabel: "bandierine", subjectName: "Uno gnomo mercante" } }] },
-      { text: "Nel Bosco dei Funghi Rossi, Leo raccoglie provviste per il viaggio.", problems: [{ type: "wordproblem", flavor: { itemLabel: "funghi rossi", characterName: "Leo" } }] },
-      { text: "Davanti a una porta di legno ci sono tre serrature di forme diverse: solo una chiave è quella giusta.", problems: [{ type: "keymatch" }] },
-      { text: "In una grotta scintillante, Leo trova un insieme di gemme di vari colori.", problems: [{ type: "counting", flavor: { mainEmoji: "💎", targetEmoji: "🔷", label: "gemme blu", allLabel: "gemme" } }] },
-      { text: "Due ponti sospesi portano al castello: uno più lungo, uno più corto.", problems: [{ type: "comparison" }] },
-      { text: "La cassaforte del castello ha una combinazione segreta nascosta in un calcolo.", problems: [{ type: "cipher" }] },
-      { text: "Gli ultimi gradini della torre sono numerati, ma uno manca all'appello.", problems: [{ type: "sequence" }] },
-      { text: "Leo è quasi arrivato: un ultimo fossato lo separa dal ponte levatoio.", problems: [{ type: "addsub" }] },
-      { text: "Re Corazza appare sulla torre più alta! Solo una doppia sfida può liberare la Principessa Stella.", problems: [{ type: "addsub" }, { type: "comparison" }] },
+      { text: "Leo entra nella Sala delle Caldaie, dove il vapore sibila tra i tubi di rame.", problems: [{ type: "addsub" }] },
+      { text: "Sul pavimento sono sparsi tanti ingranaggi: alcuni sono dorati e più preziosi degli altri.", problems: [{ type: "counting", flavor: { mainEmoji: "⚙️", targetEmoji: "🟡", label: "ingranaggi dorati", allLabel: "ingranaggi" } }] },
+      { text: "Due leve di ottone spuntano dal muro: una più lunga, una più corta. Solo quella giusta aziona il montacarichi.", problems: [{ type: "comparison" }] },
+      { text: "Un nastro trasportatore mostra casse numerate in fila, ma una cassa è andata perduta lungo il percorso.", problems: [{ type: "sequence" }] },
+      { text: "Un ingranaggio enorme blocca il passaggio: per smontarlo bisogna riconoscerne la forma.", problems: [{ type: "shapes" }] },
+      { text: "Leo ripara una valvola che borbotta numeri insieme a sbuffi di vapore.", problems: [{ type: "addsub" }] },
+      { text: "Un vecchio orologiaio robot propone un indovinello sulle rotelle colorate del suo laboratorio.", problems: [{ type: "combinatoria", flavor: { itemLabel: "rotelle colorate", subjectName: "Un vecchio orologiaio robot" } }] },
+      { text: "Nel Deposito Bulloni, Leo conta i pezzi necessari per costruire il prossimo ingranaggio.", problems: [{ type: "wordproblem", flavor: { itemLabel: "bulloni", characterName: "Leo" } }] },
+      { text: "Tre serrature meccaniche proteggono la Sala dei Pistoni: solo una chiave ha la forma giusta.", problems: [{ type: "keymatch" }] },
+      { text: "In una cesta di componenti, Leo nota alcune viti blu tra tutte le altre.", problems: [{ type: "counting", flavor: { mainEmoji: "🔩", targetEmoji: "🔵", label: "viti blu", allLabel: "viti" } }] },
+      { text: "Due tubi del vapore attraversano il soffitto: uno più lungo dell'altro.", problems: [{ type: "comparison" }] },
+      { text: "Il pannello di controllo del Grande Orologio si sblocca solo con un codice segreto.", problems: [{ type: "cipher" }] },
+      { text: "Gli ultimi ingranaggi della torre sono numerati, ma uno è scomparso, arrugginito.", problems: [{ type: "sequence" }] },
+      { text: "Leo è quasi arrivato al cuore del meccanismo: un ultimo blocco lo separa dalla stanza finale.", problems: [{ type: "addsub" }] },
+      { text: "Il Grande Orologio è fermo da troppo tempo: una doppia sfida finale lo rimetterà in moto per sempre!", problems: [{ type: "addsub" }, { type: "comparison" }] },
     ],
   },
 
