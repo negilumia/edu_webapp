@@ -27,6 +27,7 @@
   body[data-theme="spazio"]{ --primary:#2541B2; --primary-dark:#1B2F82; --accent:#00C2D1; --tint:#E8ECFF; }
   body[data-theme="dino"]{ --primary:#8C5A2B; --primary-dark:#6B421C; --accent:#7FB069; --tint:#FBF0DE; }
 
+  html{ font-size:107%; }
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{
@@ -87,6 +88,7 @@
   .badge.diff-facile{ background:#DCF5DC; color:#256029; }
   .badge.diff-media{ background:#FFEFCB; color:#8a5a00; }
   .badge.diff-difficile{ background:#FBDADA; color:#9c1f1f; }
+  .badge.diff-complicatissimo{ background:#3a2233; color:#f5c9e0; }
   .world-card[data-c="castello"]{ background:#F5E9D2; }
   .world-card[data-c="pirati"]{ background:#E6F7F5; }
   .world-card[data-c="spazio"]{ background:#E8ECFF; }
@@ -99,7 +101,7 @@
   /* ---------- BRIEFING ---------- */
   .briefing .emoji-big{ font-size:3.2rem; text-align:center; display:block; margin-bottom:6px; }
   .briefing h2{ text-align:center; font-size:1.5rem; color:var(--primary-dark); }
-  .briefing .story-text{ font-weight:700; font-size:1rem; line-height:1.5; color:#3d3a45; margin:14px 0; text-align:center; }
+  .briefing .story-text{ font-weight:700; font-size:1.12rem; line-height:1.6; color:#3d3a45; margin:14px 0; text-align:center; }
   .btn-row{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
 
   button.btn{
@@ -138,12 +140,12 @@
 
   .story-box{
     background:var(--tint); border:3px dashed var(--primary); border-radius:16px; padding:14px 16px;
-    font-weight:700; font-size:0.95rem; line-height:1.5; color:#3d3a45; margin-bottom:16px;
+    font-weight:700; font-size:1.08rem; line-height:1.6; color:#3d3a45; margin-bottom:16px;
   }
 
   .problem-box{ text-align:center; margin:18px 0; }
   .problem-index{ font-size:0.8rem; font-weight:800; color:#8a8794; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;}
-  .prompt-text{ font-weight:800; font-size:1rem; color:var(--ink); line-height:1.45; margin:6px 0 14px; }
+  .prompt-text{ font-weight:800; font-size:1.08rem; color:var(--ink); line-height:1.5; margin:6px 0 14px; }
   .equation{ font-family:'Baloo 2'; font-size:2.4rem; font-weight:800; color:var(--ink); display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
   .equation .blank{ color:var(--primary); }
   .numeric-area{ margin-top:6px; }
@@ -156,7 +158,7 @@
 
   /* insiemi/conteggio */
   .emoji-grid{
-    display:flex; flex-wrap:wrap; justify-content:center; gap:8px; font-size:1.7rem;
+    display:flex; flex-wrap:wrap; justify-content:center; gap:7px; font-size:1.5rem;
     background:var(--tint); border-radius:16px; padding:14px; margin-bottom:12px;
   }
   .emoji-grid span{ line-height:1; }
@@ -198,11 +200,25 @@
   .borrow-note{ font-size:0.78rem; font-weight:700; color:#5b5866; text-align:center; margin-bottom:6px; }
   .column-explain{ font-size:0.82rem; font-weight:700; color:#5b5866; text-align:center; margin:10px 0 0; line-height:1.4; }
 
+  /* colonna con riporto/prestito — mostrata solo dentro il box Aiuto, come esempio */
   .feedback{ min-height:1.6em; text-align:center; font-weight:800; font-family:'Baloo 2'; margin-top:10px; font-size:1.05rem; }
   .feedback.ok{ color:#2b8a3e; }
   .feedback.no{ color:#c22b2b; }
-  .hint-box{ text-align:center; font-size:0.88rem; font-weight:700; color:#5b5866; margin-top:8px; background:#f7f6fb; border-radius:10px; padding:8px 10px; display:none;}
+  .hint-box{ text-align:center; font-size:0.9rem; font-weight:700; color:#5b5866; margin-top:8px; background:#f7f6fb; border-radius:14px; padding:10px 12px; display:none;}
   .hint-box.show{ display:block; }
+  .teaching-intro{ font-size:0.86rem; font-weight:800; color:var(--primary-dark); margin:0 0 8px; line-height:1.4; }
+  .column-op{ background:#fff; border:3px solid var(--primary); border-radius:16px; padding:14px; margin-top:4px; }
+  .column-grid{
+    display:grid; grid-template-columns:auto auto; justify-content:center; column-gap:2px; row-gap:2px;
+    font-family:'Baloo 2'; font-weight:800; font-size:1.6rem; color:var(--ink); width:fit-content; margin:0 auto;
+  }
+  .col-cell{ width:46px; text-align:center; position:relative; }
+  .op-cell{ text-align:left; }
+  .result-cell{ color:var(--primary-dark); }
+  .carry-mark{ position:absolute; top:-14px; left:6px; font-size:0.9rem; color:#c22b2b; }
+  .col-line{ grid-column:1 / span 2; border-top:3px solid var(--ink); margin:4px 0; }
+  .borrow-note{ font-size:0.78rem; font-weight:700; color:#5b5866; text-align:center; margin-bottom:6px; }
+  .column-explain{ font-size:0.84rem; font-weight:700; color:#5b5866; text-align:center; margin:10px 0 0; line-height:1.45; }
 
   .center-row{ display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
 
@@ -263,7 +279,6 @@
       <p class="prompt-text hidden" id="prompt-text"></p>
       <div class="visual-area hidden" id="visual-area"></div>
       <div class="equation hidden" id="equation"></div>
-      <div class="column-area hidden" id="column-area"></div>
       <div class="numeric-area" id="numeric-area">
         <input type="text" inputmode="numeric" pattern="[0-9]*" class="answer" id="answer-input" autocomplete="off">
       </div>

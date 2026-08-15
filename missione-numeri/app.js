@@ -29,7 +29,6 @@ const els = {
   numericArea: document.getElementById("numeric-area"),
   answerInput: document.getElementById("answer-input"),
   choiceArea: document.getElementById("choice-area"),
-  columnArea: document.getElementById("column-area"),
   feedback: document.getElementById("feedback"),
   hintBox: document.getElementById("hint-box"),
   btnCheck: document.getElementById("btn-check"),
@@ -44,9 +43,9 @@ const els = {
 
 let state = {
   worldId: null,
-  stanzaIndex: 0,      // indice della stanza corrente
-  ops: [],             // enigmi generati per la stanza corrente
-  opIndex: 0,          // a quale enigma della stanza siamo
+  stanzaIndex: 0,
+  ops: [],
+  opIndex: 0,
   stars: 0,
 };
 
@@ -82,12 +81,14 @@ function units(n) { return n % 10; }
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function shuffle(arr) { return arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]); }
 
-// livelli numerici usati da vari generatori (addsub, sequence, wordproblem...)
+// Il riporto/prestito compare SOLO nel livello "hard" (Complicatissimo).
+// Negli altri livelli i numeri crescono, ma senza mai richiedere il riporto.
+// "quickChance" aumenta la frequenza di calcoli veloci entro il 20.
 const LEVEL_CONFIG = {
-  easy:    { min: 5,  max: 45, maxSum: 50 },
-  medium:  { min: 10, max: 89, maxSum: 99 },
-  medium2: { min: 10, max: 89, maxSum: 99 },
-  hard:    { min: 12, max: 89, maxSum: 99 },
+  easy:    { rangeMin: 1,  rangeMax: 20, maxSum: 20, quickChance: 1,    forceCarry: false },
+  medium:  { rangeMin: 15, rangeMax: 48, maxSum: 50, quickChance: 0.45, forceCarry: false },
+  medium2: { rangeMin: 15, rangeMax: 89, maxSum: 99, quickChance: 0.3,  forceCarry: false },
+  hard:    { rangeMin: 12, rangeMax: 89, maxSum: 99, quickChance: 0,    forceCarry: true  },
 };
 
 // ---------------- generatore: addizione / sottrazione ----------------
@@ -119,24 +120,34 @@ function genSubtraction({ min, max, avoidBorrow, forceBorrow }) {
   return { a, b, op: "-", answer: a - b };
 }
 
-function genAddSubPair(level) {
+// genera un'addizione o sottrazione coerente con le regole del livello
+function genAddSubForLevel(level) {
+  const cfg = LEVEL_CONFIG[level] || LEVEL_CONFIG.medium;
   const wantAddition = Math.random() < 0.5;
-  const c = LEVEL_CONFIG[level] || LEVEL_CONFIG.medium;
-  if (level === "easy") {
-    return wantAddition ? genAddition({ ...c, avoidCarry: true }) : genSubtraction({ ...c, avoidBorrow: true });
+  const useQuick = Math.random() < cfg.quickChance;
+  const range = useQuick
+    ? { min: 1, max: 20, maxSum: 20 }
+    : { min: cfg.rangeMin, max: cfg.rangeMax, maxSum: cfg.maxSum };
+
+  if (cfg.forceCarry) {
+    return wantAddition
+      ? genAddition({ ...range, forceCarry: true })
+      : genSubtraction({ ...range, forceBorrow: true });
   }
-  if (level === "medium") {
-    return wantAddition ? genAddition({ ...c }) : genSubtraction({ ...c });
-  }
-  if (level === "medium2") {
-    const force = Math.random() < 0.7;
-    return wantAddition ? genAddition({ ...c, forceCarry: force }) : genSubtraction({ ...c, forceBorrow: force });
-  }
-  // hard
-  return wantAddition ? genAddition({ ...c, forceCarry: true }) : genSubtraction({ ...c, forceBorrow: true });
+  return wantAddition
+    ? genAddition({ ...range, avoidCarry: true })
+    : genSubtraction({ ...range, avoidBorrow: true });
 }
 
-// spiega in parole il riporto/prestito, usato nella colonna visiva
+// decomposizione in decine/unità per il suggerimento (livelli non complicatissimi)
+function decompositionHint(a, b, op) {
+  return op === "+"
+    ? `Dividi in decine e unità: ${a} = ${tens(a) * 10} + ${units(a)}, ${b} = ${tens(b) * 10} + ${units(b)}. Somma prima le decine, poi le unità.`
+    : `Dividi in decine e unità: ${a} = ${tens(a) * 10} + ${units(a)}, ${b} = ${tens(b) * 10} + ${units(b)}. Sottrai prima le unità, poi le decine.`;
+}
+
+// ---------------- colonna con riporto/prestito (SOLO come esempio nel tasto Aiuto) ----------------
+
 function explainColumnOp(a, b, op) {
   const aT = tens(a), aU = units(a), bT = tens(b), bU = units(b);
   if (op === "+") {
@@ -144,19 +155,21 @@ function explainColumnOp(a, b, op) {
     const carry = sumU >= 10 ? 1 : 0;
     const resU = sumU % 10;
     const resT = aT + bT + carry;
-    let text = `Unità: ${aU} + ${bU} = ${sumU}.`;
-    if (carry) text += ` Scrivi ${resU} e riporta 1 alle decine.`;
-    text += ` Decine: ${aT} + ${bT}${carry ? " + 1 (il riporto)" : ""} = ${resT}.`;
+    let text = `Le unità: ${aU} + ${bU} = ${sumU}.`;
+    if (carry) text += ` Scriviamo ${resU} e portiamo 1 alle decine (il "riporto").`;
+    text += ` Le decine: ${aT} + ${bT}${carry ? " + 1 (il riporto)" : ""} = ${resT}.`;
+    text += ` Il risultato di QUESTO esempio è ${resT}${resU}.`;
     return { carryDigit: carry, resU, resT, text };
   } else {
     let aUeff = aU, aTeff = aT, borrow = 0, text = "";
     if (aU < bU) {
       aUeff = aU + 10; aTeff = aT - 1; borrow = 1;
-      text += `Non puoi togliere ${bU} da ${aU}: prendi in prestito 1 dalle decine, così le unità diventano ${aUeff}. `;
+      text += `Non possiamo togliere ${bU} da ${aU}: prendiamo in prestito 1 dalle decine, così le unità diventano ${aUeff}. `;
     }
     const resU = aUeff - bU;
     const resT = aTeff - bT;
-    text += `Unità: ${aUeff} - ${bU} = ${resU}. Decine: ${aTeff} - ${bT} = ${resT}.`;
+    text += `Le unità: ${aUeff} - ${bU} = ${resU}. Le decine: ${aTeff} - ${bT} = ${resT}.`;
+    text += ` Il risultato di QUESTO esempio è ${resT}${resU}.`;
     return { borrow, resU, resT, text };
   }
 }
@@ -165,7 +178,7 @@ function buildColumnHTML(a, b, op) {
   const info = explainColumnOp(a, b, op);
   const aT = tens(a), aU = units(a), bT = tens(b), bU = units(b);
   const carryMark = op === "+" && info.carryDigit ? `<span class="carry-mark">¹</span>` : "";
-  const borrowNote = op === "-" && info.borrow ? `<div class="borrow-note">prestito ➜ ${aT}→${aT - 1} decine, ${aU}→${aU + 10} unità</div>` : "";
+  const borrowNote = op === "-" && info.borrow ? `<div class="borrow-note">prestito ➜ le decine passano da ${aT} a ${aT - 1}, le unità da ${aU} a ${aU + 10}</div>` : "";
   return `
     <div class="column-op">
       ${borrowNote}
@@ -179,11 +192,26 @@ function buildColumnHTML(a, b, op) {
     </div>`;
 }
 
-// ---------------- generatori: nuove tipologie ----------------
+// genera un esempio illustrativo DIVERSO dal problema reale, da mostrare nel tasto Aiuto
+function buildRiportoTeaching(op, realA, realB) {
+  let example;
+  for (let i = 0; i < 30; i++) {
+    example = op === "+"
+      ? genAddition({ min: 15, max: 79, maxSum: 99, forceCarry: true })
+      : genSubtraction({ min: 22, max: 89, forceBorrow: true });
+    if (example.a !== realA || example.b !== realB) break;
+  }
+  const intro = op === "+"
+    ? `Ecco come funziona il riporto, con un esempio diverso dal tuo calcolo. Prova poi a fare lo stesso ragionamento con i tuoi numeri!`
+    : `Ecco come funziona il prestito, con un esempio diverso dal tuo calcolo. Prova poi a fare lo stesso ragionamento con i tuoi numeri!`;
+  return `<p class="teaching-intro">${intro}</p>` + buildColumnHTML(example.a, example.b, op);
+}
+
+// ---------------- generatori: tipologie di enigma ----------------
 
 function genCounting(flavor) {
-  const total = rand(7, 12);
-  const target = rand(2, Math.min(6, total - 2));
+  const total = rand(11, 18);
+  const target = rand(3, Math.min(9, total - 3));
   const items = shuffle([
     ...Array(target).fill(flavor.targetEmoji),
     ...Array(total - target).fill(flavor.mainEmoji),
@@ -194,7 +222,7 @@ function genCounting(flavor) {
     promptText: `Quanti/e ${flavor.label} ci sono in questo insieme di ${flavor.allLabel}?`,
     visualHTML: grid,
     answer: target,
-    hint: `Conta solo ${items.filter(i => i === flavor.targetEmoji).length > 0 ? flavor.label : flavor.label}: ignora gli altri simboli e conta soltanto quelli giusti, uno alla volta.`,
+    hint: `Conta solo ${flavor.label}: tocca con il dito ogni simbolo giusto, uno alla volta, e ignora gli altri.`,
   };
 }
 
@@ -253,7 +281,7 @@ function genShapes() {
     promptText: question,
     visualHTML: `<div class="shape-visual">${shape.symbol}</div>`,
     answer: shape.sides,
-    hint: shape.sides === 0 ? "Il cerchio è tondo: non ha spigoli né lati dritti." : `Conta i lati uno per uno seguendo il contorno del ${shape.name}: in una figura chiusa, il numero di lati è sempre uguale al numero di vertici.`,
+    hint: shape.sides === 0 ? "Il cerchio è tondo: non ha spigoli né lati dritti." : `Conta i lati uno per uno seguendo il contorno del ${shape.name}: in una figura chiusa, lati e vertici sono sempre in numero uguale.`,
   };
 }
 
@@ -271,31 +299,27 @@ function genKeyMatch() {
 }
 
 function genWordProblem(flavor, level) {
-  const c = LEVEL_CONFIG[level] || LEVEL_CONFIG.medium;
-  const isAddition = Math.random() < 0.5;
-  if (isAddition) {
-    const p = genAddition({ ...c, avoidCarry: level === "easy" });
+  const p = genAddSubForLevel(level);
+  if (p.op === "+") {
     return {
       kind: "numeric",
-      promptText: `${flavor.characterName} ha raccolto ${p.a} ${flavor.itemLabel} la mattina e altri ${p.b} ${flavor.itemLabel} nel pomeriggio. Quanti ${flavor.itemLabel} ha in totale?`,
+      promptText: `${flavor.characterName} ha raccolto ${p.a} ${flavor.itemLabel} la mattina e altri ${p.b} ${flavor.itemLabel} nel pomeriggio. Quanti ${flavor.itemLabel} ci sono in totale?`,
       answer: p.answer,
       hint: `È un'addizione: metti insieme le due quantità, ${p.a} + ${p.b}.`,
     };
-  } else {
-    const p = genSubtraction({ ...c, avoidBorrow: level === "easy" });
-    return {
-      kind: "numeric",
-      promptText: `${flavor.characterName} aveva ${p.a} ${flavor.itemLabel}, ma ne ha usati ${p.b} lungo il cammino. Quanti ${flavor.itemLabel} gli restano?`,
-      answer: p.answer,
-      hint: `È una sottrazione: togli dal totale la parte usata, ${p.a} - ${p.b}.`,
-    };
   }
+  return {
+    kind: "numeric",
+    promptText: `${flavor.characterName} aveva ${p.a} ${flavor.itemLabel}, ma ne ha usati ${p.b} lungo il cammino. Quanti ${flavor.itemLabel} restano?`,
+    answer: p.answer,
+    hint: `È una sottrazione: togli dal totale la parte usata, ${p.a} - ${p.b}.`,
+  };
 }
 
 function genSequence(level) {
   const steps = level === "hard" ? [3, 4, 6, 7, 9] : level === "easy" ? [2, 5, 10] : [2, 3, 5, 10];
   const step = steps[rand(0, steps.length - 1)];
-  const start = rand(0, level === "hard" ? 40 : 15) ;
+  const start = rand(0, level === "hard" ? 40 : 15);
   const seq = [0, 1, 2, 3, 4].map(i => start + i * step);
   const missingIdx = rand(1, 3);
   const displayed = seq.map((n, i) => (i === missingIdx ? "❓" : n));
@@ -308,33 +332,62 @@ function genSequence(level) {
   };
 }
 
+// sequenze di SIMBOLI: esercizio di riconoscimento pattern
+const PATTERN_SETS = [
+  ["🔴", "🔵"],
+  ["⭐", "🌙"],
+  ["🟩", "🟨"],
+  ["🔺", "🔷"],
+  ["🐱", "🐶", "🐰"],
+  ["☀️", "🌧️", "⛅"],
+  ["🔺", "🔷", "⬛"],
+];
+
+function genPattern() {
+  const set = PATTERN_SETS[rand(0, PATTERN_SETS.length - 1)];
+  const unitLen = set.length;
+  const totalLen = unitLen === 2 ? 8 : 9;
+  const seq = Array.from({ length: totalLen }, (_, i) => set[i % unitLen]);
+  const missingIdx = rand(2, totalLen - 2);
+  const answer = seq[missingIdx];
+  const displayed = seq.map((s, i) => (i === missingIdx ? "❓" : s));
+  const otherSets = PATTERN_SETS.filter(s => s !== set);
+  const distractorSet = otherSets[rand(0, otherSets.length - 1)];
+  const distractor = distractorSet.find(s => !set.includes(s)) || distractorSet[0];
+  const choiceSymbols = shuffle([...new Set([...set, distractor])]);
+  return {
+    kind: "choice",
+    promptText: "Osserva lo schema: quale simbolo manca per continuare il pattern?",
+    visualHTML: `<div class="sequence-visual">${displayed.map(s => `<span class="seq-item">${s}</span>`).join("")}</div>`,
+    choices: choiceSymbols.map(s => ({ label: s, value: s })),
+    answer,
+    hint: "Guarda come si ripetono i simboli: individua il gruppetto che torna sempre uguale e capirai cosa manca al suo posto.",
+  };
+}
+
 function genCipher(level) {
-  const p = genAddSubPair(level);
-  const showColumn = level === "hard";
+  const p = genAddSubForLevel(level);
+  const isHard = level === "hard";
   return {
     kind: "numeric",
     promptText: "🔒 Risolvi il calcolo per scoprire il codice segreto!",
     equationHTML: `<span>${p.a}</span><span>${p.op}</span><span>${p.b}</span><span>=</span>`,
-    columnHTML: showColumn ? buildColumnHTML(p.a, p.b, p.op) : null,
     answer: p.answer,
-    hint: p.op === "+"
-      ? `Dividi in decine e unità: ${p.a} = ${tens(p.a) * 10} + ${units(p.a)}, ${p.b} = ${tens(p.b) * 10} + ${units(p.b)}. Somma prima le decine, poi le unità.`
-      : `Dividi in decine e unità: ${p.a} = ${tens(p.a) * 10} + ${units(p.a)}, ${p.b} = ${tens(p.b) * 10} + ${units(p.b)}. Sottrai prima le unità, poi le decine.`,
+    hint: isHard ? null : decompositionHint(p.a, p.b, p.op),
+    hintHTML: isHard ? buildRiportoTeaching(p.op, p.a, p.b) : null,
   };
 }
 
 function genAddSub(level) {
-  const p = genAddSubPair(level);
-  const showColumn = level === "hard";
+  const p = genAddSubForLevel(level);
+  const isHard = level === "hard";
   return {
     kind: "numeric",
     promptText: null,
     equationHTML: `<span>${p.a}</span><span>${p.op}</span><span>${p.b}</span><span>=</span>`,
-    columnHTML: showColumn ? buildColumnHTML(p.a, p.b, p.op) : null,
     answer: p.answer,
-    hint: p.op === "+"
-      ? `Dividi in decine e unità: ${p.a} = ${tens(p.a) * 10} + ${units(p.a)}, ${p.b} = ${tens(p.b) * 10} + ${units(p.b)}. Somma prima le decine, poi le unità.`
-      : `Dividi in decine e unità: ${p.a} = ${tens(p.a) * 10} + ${units(p.a)}, ${p.b} = ${tens(p.b) * 10} + ${units(p.b)}. Sottrai prima le unità, poi le decine.`,
+    hint: isHard ? null : decompositionHint(p.a, p.b, p.op),
+    hintHTML: isHard ? buildRiportoTeaching(p.op, p.a, p.b) : null,
   };
 }
 
@@ -350,6 +403,7 @@ function generateProblem(problemDef, level) {
     case "keymatch": return genKeyMatch();
     case "wordproblem": return genWordProblem(flavor, level);
     case "sequence": return genSequence(level);
+    case "pattern": return genPattern();
     case "cipher": return genCipher(level);
     case "addsub":
     default: return genAddSub(level);
@@ -378,7 +432,7 @@ function renderHome() {
       <p>${world.tagline}</p>
       <div class="meta">
         <span class="badge stanze">${world.stanze.length} stanze</span>
-        <span class="badge diff-${world.difficulty}">${world.difficulty}</span>
+        <span class="badge diff-${world.difficulty}">${world.difficultyLabel}</span>
       </div>
     `;
     card.addEventListener("click", () => openBriefing(world.id));
@@ -469,10 +523,6 @@ function renderGame() {
   els.equation.innerHTML = problem.equationHTML || "";
   els.equation.classList.toggle("hidden", !problem.equationHTML);
 
-  els.columnArea.innerHTML = problem.columnHTML || "";
-  els.columnArea.classList.toggle("hidden", !problem.columnHTML);
-
-  // area di risposta: numerica oppure a scelta multipla
   if (problem.kind === "choice") {
     els.numericArea.classList.add("hidden");
     els.choiceArea.classList.remove("hidden");
@@ -495,7 +545,7 @@ function renderGame() {
   els.feedback.textContent = "";
   els.feedback.className = "feedback";
   els.hintBox.classList.remove("show");
-  els.hintBox.textContent = "";
+  els.hintBox.innerHTML = "";
 
   showScreen("game");
   if (problem.kind !== "choice") {
@@ -551,7 +601,11 @@ function pickPraise() {
 
 function showHint() {
   const problem = state.ops[state.opIndex];
-  els.hintBox.textContent = "💡 " + (problem.hint || "Ragiona con calma, un pezzo alla volta!");
+  if (problem.hintHTML) {
+    els.hintBox.innerHTML = problem.hintHTML;
+  } else {
+    els.hintBox.textContent = "💡 " + (problem.hint || "Ragiona con calma, un pezzo alla volta!");
+  }
   els.hintBox.classList.add("show");
 }
 
